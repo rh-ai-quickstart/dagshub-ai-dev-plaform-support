@@ -1,0 +1,43 @@
+---
+description: "AI Agent package development guide"
+globs: ["packages/agent/**/*.py"]
+---
+
+# AI Agent Package
+
+## Architecture
+
+The agent package is a **Python library** imported by the API. Routes are registered under `/agent`.
+
+```
+packages/agent/src/
+├── schema.py           # Pydantic request/response models
+├── settings.py         # AgentSettings configuration
+├── core/
+│   ├── agent.py        # get_agent() context manager
+│   ├── manager.py      # Streaming + SSE formatting
+│   ├── providers.py    # LLM provider factory
+│   ├── prompt.py       # System prompt
+│   └── storage.py      # Checkpoint saver
+└── routes/
+    ├── router.py       # create_agent_router()
+    ├── health.py       # GET /agent/health
+    ├── stream.py       # POST /agent/stream (SSE)
+    ├── threads.py      # Thread management
+    └── history.py      # Conversation history
+```
+
+## Key Patterns
+
+- Library pattern: API imports agent, not standalone server
+- Provider factory in `core/providers.py` (google/openai/anthropic/llamastack)
+- Settings via `pydantic-settings` with `.env` support
+- MCP tools loaded conditionally when `MCP_ENABLED=true`
+- Checkpoint storage: in-memory (default) or PostgreSQL
+
+## Commands
+
+```bash
+pnpm --filter @dagshub-ai-dev-plaform-support/agent test
+pnpm --filter @dagshub-ai-dev-plaform-support/agent lint
+```

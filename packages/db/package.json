@@ -1,0 +1,17 @@
+{
+  "name": "@dagshub-ai-dev-plaform-support/db",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "CONTAINER_STARTED=0; \\\nif ! podman-compose -f ../../compose.yml ps dagshub-ai-dev-plaform-support-db 2>/dev/null | grep -q \"Up\"; then \\\n  echo \"Starting database container...\"; \\\n  podman-compose -f ../../compose.yml up -d dagshub-ai-dev-plaform-support-db; \\\n  CONTAINER_STARTED=1; \\\nelse \\\n  echo \"Database container is already running\"; \\\nfi; \\\ncleanup() { \\\n  if [ \"$$CONTAINER_STARTED\" = \"1\" ]; then \\\n    echo \"Stopping database container...\"; \\\n    podman-compose -f ../../compose.yml down dagshub-ai-dev-plaform-support-db; \\\n  fi; \\\n}; \\\ntrap cleanup EXIT INT TERM; \\\npnpm migrate && podman-compose -f ../../compose.yml logs -f dagshub-ai-dev-plaform-support-db",
+    "db:start": "podman-compose -f ../../compose.yml up -d dagshub-ai-dev-plaform-support-db",
+    "db:stop": "podman-compose -f ../../compose.yml down dagshub-ai-dev-plaform-support-db",
+    "db:logs": "podman-compose -f ../../compose.yml logs -f dagshub-ai-dev-plaform-support-db",
+    "migrate": "uv run alembic upgrade head",
+    "migrate:down": "uv run alembic downgrade -1",
+    "migrate:new": "uv run alembic revision --autogenerate",
+    "migrate:history": "uv run alembic history",
+    "migrate:current": "uv run alembic current",
+    "install:deps": "uv sync"
+  }
+}

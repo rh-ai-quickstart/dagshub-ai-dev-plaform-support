@@ -1,0 +1,15 @@
+{
+  "name": "@dagshub-ai-dev-plaform-support/agent",
+  "private": true,
+  "version": "0.0.0",
+  "description": "LangGraph AI agent with configurable LLM provider",
+  "scripts": {
+    "install:deps": "uv sync",
+    "test": "uv run pytest",
+    "lint": "uv run ruff check .",
+    "lint:fix": "uv run ruff check . --fix",
+    "format": "uv run ruff format .",
+    "format:check": "uv run ruff format . --check",
+    "type-check": "uv run mypy src/"
+  }
+}

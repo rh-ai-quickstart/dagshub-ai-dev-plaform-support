@@ -1,0 +1,30 @@
+---
+description: Chat package development guidelines
+globs:
+  - "packages/chat/**/*"
+---
+
+# Chat Package
+
+Dual package: Fastify SSE proxy + assistant-ui React components.
+
+## Architecture
+
+- `src/components/ChatPage.tsx` — Main component using `useLangGraphRuntime`
+- `src/server/` — Fastify backend proxying to AGENT_HOST
+- `src/index.ts` — Barrel export consumed by UI package via workspace dep
+
+## Key Points
+
+- Components use **assistant-ui** — don't build custom chat UI primitives
+- Customize via `npx assistant-ui add thread thread-list` in packages/ui
+- Server proxies `/api/v1/*` to `AGENT_HOST` (LangGraph agent)
+- Dev port: 8081, Container port: 8080
+- Two tsconfig files: `tsconfig.json` (components) and `tsconfig.server.json` (server)
+
+## Build
+
+```bash
+pnpm --filter chat build           # Both components + server
+pnpm --filter chat dev             # Dev server on port 8081
+```

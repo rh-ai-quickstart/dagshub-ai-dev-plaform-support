@@ -1,0 +1,16 @@
+FROM registry.access.redhat.com/ubi9/python-311:latest
+
+WORKDIR /opt/app-root/src
+
+COPY packages/mcp/pyproject.toml packages/mcp/uv.lock* ./
+
+RUN pip install --no-cache-dir uv && \
+    uv sync --no-dev
+
+COPY packages/mcp/src ./src
+
+EXPOSE 3001
+
+USER 1001
+
+CMD ["uv", "run", "uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "3001"]

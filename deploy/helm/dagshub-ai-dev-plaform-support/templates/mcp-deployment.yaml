@@ -1,0 +1,66 @@
+{{- if .Values.mcp.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.mcp.name }}
+  labels:
+    {{- include "dagshub-ai-dev-plaform-support.mcp.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.mcp.replicas }}
+  selector:
+    matchLabels:
+      {{- include "dagshub-ai-dev-plaform-support.mcp.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "dagshub-ai-dev-plaform-support.mcp.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "dagshub-ai-dev-plaform-support.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: mcp
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "dagshub-ai-dev-plaform-support.image" (dict "name" .Values.mcp.image.repository "tag" .Values.mcp.image.tag "Values" .Values) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          env:
+            - name: MCP_HOST
+              value: "0.0.0.0"
+            - name: MCP_PORT
+              value: "3000"
+            - name: MCP_TRANSPORT_PROTOCOL
+              value: "sse"
+          {{- if .Values.mcp.healthCheck.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.mcp.healthCheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.mcp.healthCheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.mcp.healthCheck.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.mcp.healthCheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.mcp.healthCheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.mcp.healthCheck.periodSeconds }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.mcp.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

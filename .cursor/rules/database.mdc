@@ -1,0 +1,66 @@
+---
+description: "PostgreSQL/SQLAlchemy database patterns"
+globs: ["packages/db/**/*.py", "packages/api/src/models/**/*.py"]
+---
+
+# Database Development
+
+## Technology Stack
+
+- **PostgreSQL** - Primary database
+- **SQLAlchemy 2.0** - Async ORM with type hints
+- **Alembic** - Database migrations
+- **asyncpg** - Async PostgreSQL driver
+
+## Package Structure
+
+```
+packages/db/
+├── src/db/
+│   ├── database.py   # Connection and session management
+│   └── models.py     # SQLAlchemy model definitions
+├── alembic/versions/ # Migration files
+└── alembic.ini       # Alembic configuration
+```
+
+## Adding a New Model
+
+1. Define model in `packages/db/src/db/models.py`
+2. Export from `packages/db/src/__init__.py`
+3. Generate migration: `pnpm db:migrate:new -m "description"`
+4. Review migration in `alembic/versions/`
+5. Apply migration: `pnpm db:migrate`
+
+## Model Best Practices
+
+```python
+# Use SQLAlchemy 2.0 style with Mapped[]
+id: Mapped[int] = mapped_column(primary_key=True)
+name: Mapped[str] = mapped_column(String(100))
+
+# Index frequently queried columns
+email: Mapped[str] = mapped_column(String(255), index=True)
+
+# Use server defaults for timestamps
+created_at: Mapped[datetime] = mapped_column(
+    DateTime(timezone=True),
+    server_default=func.now()
+)
+```
+
+## Migration Commands
+
+```bash
+pnpm db:migrate           # Apply all pending migrations
+pnpm db:migrate:new -m "" # Create new migration
+pnpm db:migrate:down      # Rollback one migration
+pnpm db:migrate:history   # Show migration history
+```
+
+## Database Commands
+
+```bash
+make db-start    # Start database container
+make db-stop     # Stop database container
+make db-logs     # View database logs
+```
