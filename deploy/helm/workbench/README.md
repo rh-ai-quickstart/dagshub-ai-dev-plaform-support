@@ -1,0 +1,119 @@
+# Deploy DagsHub LLM Tutorial Workbench
+
+Learn LLM development with hands-on tutorials covering RAG, fine-tuning, and evaluation in a pre-configured Jupyter environment on OpenShift AI.
+
+## Table of contents
+
+- [Detailed description](#detailed-description)
+- [Architecture diagrams](#architecture-diagrams)
+- [Requirements](#requirements)
+- [Deploy](#deploy)
+- [Delete](#delete)
+- [Tags](#tags)
+
+## Detailed description
+
+This quickstart deploys a comprehensive LLM development environment that teaches practitioners how to build, fine-tune, and evaluate large language models using DagsHub's MLOps platform. The workbench provides a hands-on tutorial covering the complete machine learning lifecycle for LLM applications.
+
+The solution addresses the common challenge of learning LLM development without access to proper tooling and examples. Instead of struggling with complex setup procedures, data scientists and ML engineers can immediately start working with a fully configured environment that demonstrates best practices for LLM workflows.
+
+The tutorial covers essential LLM development concepts including Retrieval-Augmented Generation (RAG) pipeline construction, model fine-tuning with LoRA adapters, and comprehensive evaluation strategies using RAGAS and LLM-as-a-judge techniques. This hands-on approach accelerates learning and provides practical experience with production-ready MLOps tools.
+
+### Architecture diagrams
+
+The architecture consists of a Jupyter workbench deployed to OpenShift AI with persistent storage for notebooks and data. Documentation can be dynamically fetched from the official DagsHub repository, ensuring users always have access to the latest guides and best practices.
+
+Key components:
+- Jupyter workbench pod with persistent storage
+- Git documentation job (optional) for fetching latest docs
+- Setup job for workspace initialization
+- ConfigMaps for static content when git docs are disabled
+
+## Requirements
+
+- OpenShift cluster with OpenShift AI operator installed and configured
+- Cluster admin privileges for workbench deployment
+- Helm 3.8+ installed and configured
+- `oc` CLI tool authenticated to the target cluster
+- Network access to external git repositories for documentation fetching
+
+### Minimum hardware requirements
+
+- 3 vCPU cores allocated to the workbench
+- 24 GB RAM allocated to the workbench  
+- 20 GB persistent storage for workspace data
+- GPU access recommended for model fine-tuning exercises
+
+### Minimum software requirements
+
+- Red Hat OpenShift 4.12+
+- Red Hat OpenShift AI 2.8+ (tested with OpenShift AI 2.22)
+- Helm 3.8+
+- OpenShift CLI (`oc`) 4.12+
+
+## Deploy
+
+1. Navigate to the workbench deployment directory:
+   ```bash
+   cd deploy/helm/workbench
+   ```
+
+2. Configure the workbench values by editing `values.yaml`:
+   ```yaml
+   workbench:
+     enabled: true
+     name: dagshub-llm-tutorial
+     username: kubeadmin  # Replace with your username
+     
+     dagsHub:
+       host: "http://localhost:3000"  # Replace with your DagsHub instance
+     
+     # Optional: Enable git-based documentation
+     gitDocs:
+       enabled: true  # Set to true for latest docs
+   ```
+
+3. Deploy the workbench using Helm:
+   ```bash
+   helm install dagshub-workbench . -n <namespace> --create-namespace
+   ```
+
+4. Monitor the deployment progress:
+   ```bash
+   oc get jobs -n <namespace> -w
+   ```
+
+5. Access the workbench:
+   - Open the OpenShift AI dashboard
+   - Navigate to "Data Science Projects" 
+   - Find your namespace/project
+   - Click on the "dagshub-llm-tutorial" workbench
+   - Open `hello_world_llm.ipynb` to start the tutorial
+
+6. Verify the setup:
+   ```bash
+   oc logs job/dagshub-llm-tutorial-notebook-setup -n <namespace>
+   ```
+
+### Delete
+
+Remove the workbench deployment:
+
+```bash
+helm uninstall dagshub-workbench -n <namespace>
+```
+
+Clean up remaining resources if needed:
+
+```bash
+oc delete pvc dagshub-llm-tutorial-notebook-pvc -n <namespace>
+```
+
+## Tags
+
+- **Industry**: Technology
+- **Use case**: LLM development and training
+- **Framework**: DagsHub, Jupyter, MLOps
+- **Complexity**: Intermediate
+- **Audience**: Data scientists, ML engineers
+- **Technology**: Large Language Models, RAG, Fine-tuning, Model evaluation

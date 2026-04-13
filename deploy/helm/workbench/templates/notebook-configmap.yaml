@@ -1,0 +1,13 @@
+{{- if .Values.workbench.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.workbench.name }}-notebook-content
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.workbench.name }}
+    app.kubernetes.io/component: notebook-content
+data:
+  hello_world_llm.ipynb: |
+{{ .Files.Get "hello_world_llm.ipynb" | indent 4 }}
+{{- end }}

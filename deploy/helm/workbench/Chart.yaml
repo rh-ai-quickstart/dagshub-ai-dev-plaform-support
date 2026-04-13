@@ -1,0 +1,12 @@
+apiVersion: v2
+name: dagshub-workbench
+description: A Helm chart for deploying DagsHub LLM Tutorial workbench on OpenShift AI
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - dagshub
+  - llm
+  - jupyter
+  - openshift-ai
+  - machine-learning

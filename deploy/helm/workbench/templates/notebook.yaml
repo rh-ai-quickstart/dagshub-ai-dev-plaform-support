@@ -1,0 +1,116 @@
+{{- if .Values.workbench.enabled }}
+apiVersion: kubeflow.org/v1
+kind: Notebook
+metadata:
+  name: {{ .Values.workbench.name }}-notebook
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Values.workbench.name }}-notebook
+    opendatahub.io/dashboard: "true"
+    opendatahub.io/odh-managed: "true"
+    opendatahub.io/user: {{ .Values.workbench.username }}
+  annotations:
+    notebooks.opendatahub.io/inject-oauth: "true"
+    notebooks.opendatahub.io/last-size-selection: "Medium"
+    notebooks.opendatahub.io/oauth-logout-url: "https://rhods-dashboard-redhat-ods-applications.apps.1c53ecd9-dagshubqs.openshiftpartnerlabs.com/projects/{{ .Release.Namespace }}?notebookLogout={{ .Values.workbench.name }}-notebook"
+    opendatahub.io/username: {{ .Values.workbench.username }}
+    opendatahub.io/image-display-name: "Jupyter | Minimal | CPU | Python 3.12"
+    openshift.io/display-name: "{{ .Values.workbench.name }}-notebook"
+spec:
+  template:
+    spec:
+      containers:
+      - name: {{ .Values.workbench.name }}-notebook
+        image: {{ .Values.workbench.image.repository }}:{{ .Values.workbench.image.tag }}
+        imagePullPolicy: {{ .Values.workbench.image.pullPolicy }}
+        workingDir: /opt/app-root/src
+        env:
+        - name: NOTEBOOK_ARGS
+          value: >-
+            --ServerApp.port=8888
+            --ServerApp.token=''
+            --ServerApp.password=''
+            --ServerApp.base_url=/notebook/{{ .Release.Namespace }}/{{ .Values.workbench.name }}-notebook
+            --ServerApp.quit_button=False
+        - name: RESTARTABLE
+          value: "yes"
+        - name: JUPYTER_IMAGE
+          value: {{ .Values.workbench.image.repository }}:{{ .Values.workbench.image.tag }}
+        # Jupyter runtime directories - set to writable locations for OpenShift
+        - name: JUPYTER_RUNTIME_DIR
+          value: /opt/app-root/src/.jupyter/runtime
+        - name: JUPYTER_DATA_DIR
+          value: /opt/app-root/src/.jupyter/data
+        - name: JUPYTER_CONFIG_DIR
+          value: /opt/app-root/src/.jupyter/config
+        # IPython configuration
+        - name: IPYTHONDIR
+          value: /opt/app-root/src/.ipython
+        # Set HOME to writable location for OpenShift arbitrary UIDs
+        - name: HOME
+          value: /opt/app-root/src
+        # Disable conda config file in home directory
+        - name: CONDARC
+          value: /opt/app-root/src/.condarc
+        # DagsHub client configuration
+        - name: DAGSHUB_CLIENT_HOST
+          value: {{ .Values.workbench.dagsHub.host | quote }}
+        ports:
+        - containerPort: 8888
+          name: notebook-port
+          protocol: TCP
+        resources:
+          limits:
+            cpu: {{ .Values.workbench.resources.limits.cpu | quote }}
+            memory: {{ .Values.workbench.resources.limits.memory | quote }}
+          requests:
+            cpu: {{ .Values.workbench.resources.requests.cpu | quote }}
+            memory: {{ .Values.workbench.resources.requests.memory | quote }}
+        startupProbe:
+          httpGet:
+            scheme: HTTP
+            path: /notebook/{{ .Release.Namespace }}/{{ .Values.workbench.name }}-notebook/api
+            port: notebook-port
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 60
+        livenessProbe:
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+          httpGet:
+            scheme: HTTP
+            path: /notebook/{{ .Release.Namespace }}/{{ .Values.workbench.name }}-notebook/api
+            port: notebook-port
+        readinessProbe:
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+          httpGet:
+            scheme: HTTP
+            path: /notebook/{{ .Release.Namespace }}/{{ .Values.workbench.name }}-notebook/api
+            port: notebook-port
+        volumeMounts:
+        - name: workspace
+          mountPath: /opt/app-root/src
+        {{- if .Values.workbench.shm.enabled }}
+        - name: shm
+          mountPath: /dev/shm
+        {{- end }}
+      volumes:
+      - name: workspace
+        persistentVolumeClaim:
+          claimName: {{ .Values.workbench.name }}-notebook-pvc
+      {{- if .Values.workbench.shm.enabled }}
+      - name: shm
+        emptyDir:
+          medium: Memory
+          sizeLimit: {{ .Values.workbench.shm.size }}
+      {{- end }}
+{{- end }}

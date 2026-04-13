@@ -1,0 +1,15 @@
+{{- if and .Values.workbench.enabled (not .Values.workbench.gitDocs.enabled) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.workbench.name }}-docs-content
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.workbench.name }}
+    app.kubernetes.io/component: docs-content
+data:
+{{- range $path, $bytes := .Files.Glob "docs/**" }}
+  {{ $path | replace "/" "_" }}: |
+{{ $.Files.Get $path | indent 4 }}
+{{- end }}
+{{- end }}

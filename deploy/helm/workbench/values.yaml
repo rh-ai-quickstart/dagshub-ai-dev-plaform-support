@@ -1,0 +1,45 @@
+workbench:
+  enabled: true
+  name: dagshub-llm-tutorial
+  username: kubeadmin
+
+  # DagsHub configuration
+  dagsHub:
+    host: "http://localhost:3000"
+
+  image:
+    repository: image-registry.openshift-image-registry.svc:5000/redhat-ods-applications/s2i-minimal-notebook
+    tag: "2025.2"
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      cpu: "3"
+      memory: "24Gi"
+    limits:
+      cpu: "6"
+      memory: "24Gi"
+
+  storage:
+    size: "20Gi"
+    storageClassName: ""  # Use default storage class
+
+  shm:
+    enabled: true
+    size: "2Gi"
+
+  setupJob:
+    image: "registry.redhat.io/ubi8/ubi-minimal:8.9"
+
+  # Git-based documentation provisioning
+  gitDocs:
+    enabled: false  # Default: backwards compatibility
+    repository: "https://dagshub.com/DAGsHub-Official/dagshub-docs.git"
+    branch: "main"
+    sourcePath: "docs"  # Subdirectory to copy from repository
+    targetPath: "docs"  # Target directory in workspace
+
+    # Git clone configuration
+    retryAttempts: 3
+    retryDelay: 10
+    timeout: 300

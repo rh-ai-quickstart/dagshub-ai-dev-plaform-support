@@ -1,0 +1,24 @@
+{{- if .Values.workbench.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.workbench.name }}-notebook-pvc
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.workbench.name }}
+    app.kubernetes.io/component: notebook
+    opendatahub.io/dashboard: "true"
+  annotations:
+    openshift.io/display-name: "DagsHub LLM Tutorial Workspace"
+    helm.sh/resource-policy: keep
+    helm.sh/hook-weight: "-5"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.workbench.storage.size }}
+  {{- if .Values.workbench.storage.storageClassName }}
+  storageClassName: {{ .Values.workbench.storage.storageClassName }}
+  {{- end }}
+{{- end }}
