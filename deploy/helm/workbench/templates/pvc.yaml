@@ -11,7 +11,6 @@ metadata:
   annotations:
     openshift.io/display-name: "DagsHub LLM Tutorial Workspace"
     helm.sh/resource-policy: keep
-    helm.sh/hook-weight: "-5"
 spec:
   accessModes:
     - ReadWriteOnce

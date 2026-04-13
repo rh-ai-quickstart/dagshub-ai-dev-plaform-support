@@ -12,13 +12,131 @@ metadata:
   annotations:
     notebooks.opendatahub.io/inject-oauth: "true"
     notebooks.opendatahub.io/last-size-selection: "Medium"
-    notebooks.opendatahub.io/oauth-logout-url: "https://rhods-dashboard-redhat-ods-applications.apps.1c53ecd9-dagshubqs.openshiftpartnerlabs.com/projects/{{ .Release.Namespace }}?notebookLogout={{ .Values.workbench.name }}-notebook"
     opendatahub.io/username: {{ .Values.workbench.username }}
     opendatahub.io/image-display-name: "Jupyter | Minimal | CPU | Python 3.12"
     openshift.io/display-name: "{{ .Values.workbench.name }}-notebook"
 spec:
   template:
     spec:
+      initContainers:
+      - name: workspace-setup
+        image: {{ .Values.workbench.setupJob.image }}
+        command: ["/bin/sh"]
+        args:
+        - -c
+        - |
+          set -e
+          echo "Starting workspace setup..."
+
+          {{- if .Values.workbench.gitSync.enabled }}
+          # Use ConfigMap fallbacks if git content is missing
+          if [ ! -f /workspace/hello_world_llm.ipynb ] && [ -f /notebook-content/hello_world_llm.ipynb ]; then
+            echo "Using notebook ConfigMap fallback..."
+            cp /notebook-content/hello_world_llm.ipynb /workspace/hello_world_llm.ipynb
+          fi
+
+          if [ ! -d /workspace/docs ] || [ -z "$(find /workspace/docs -name '*.md' 2>/dev/null | head -1)" ]; then
+            echo "Using docs ConfigMap fallback..."
+            mkdir -p /workspace/docs
+            if [ -d /docs-content ]; then
+              for file in /docs-content/*; do
+                if [ -f "$file" ]; then
+                  basename=$(basename "$file")
+                  target_path=$(echo "$basename" | sed 's/_/\//g')
+                  target_dir=$(dirname "/workspace/$target_path")
+                  mkdir -p "$target_dir"
+                  cp "$file" "/workspace/$target_path"
+                fi
+              done
+              echo "Documentation copied from ConfigMap fallback"
+            fi
+          fi
+          {{- else }}
+          # Copy notebook from ConfigMap
+          echo "Copying notebook from ConfigMap..."
+          if [ -f /notebook-content/hello_world_llm.ipynb ]; then
+            cp /notebook-content/hello_world_llm.ipynb /workspace/hello_world_llm.ipynb
+            echo "Notebook copied successfully"
+          else
+            echo "ERROR: Notebook not found in ConfigMap"
+            exit 1
+          fi
+
+          # Create docs directory and copy documentation
+          echo "Setting up documentation from ConfigMap..."
+          mkdir -p /workspace/docs
+
+          if [ -d /docs-content ]; then
+            echo "Copying documentation from ConfigMap..."
+            for file in /docs-content/*; do
+              if [ -f "$file" ]; then
+                basename=$(basename "$file")
+                target_path=$(echo "$basename" | sed 's/_/\//g')
+                target_dir=$(dirname "/workspace/$target_path")
+                mkdir -p "$target_dir"
+                cp "$file" "/workspace/$target_path"
+                echo "Copied $basename -> $target_path"
+              fi
+            done
+            echo "Documentation setup complete"
+          else
+            echo "WARNING: Docs ConfigMap not mounted, skipping docs setup"
+          fi
+          {{- end }}
+
+          # Create welcome README
+          cat > /workspace/README.md << 'EOF'
+          # DagsHub LLM Tutorial Workspace
+
+          Welcome to your DagsHub LLM Tutorial workbench!
+
+          ## Getting Started
+
+          1. Open the `hello_world_llm.ipynb` notebook to start the tutorial
+          2. Follow the step-by-step instructions to build an end-to-end LLM application
+          3. Learn about RAG, fine-tuning, and evaluation with DagsHub
+
+          ## What You'll Learn
+
+          - Problem Definition for LLM applications
+          - Data Preparation and vector embeddings
+          - Model & Prompt Selection
+          - Fine-tuning with LoRA
+          - Testing & Evaluation with RAGAS
+
+          ## DagsHub Integration
+
+          This workbench is pre-configured to connect to your DagsHub instance at:
+          `{{ .Values.workbench.dagsHub.host }}`
+
+          ## Documentation
+
+          {{- if .Values.workbench.gitSync.enabled }}
+          The `docs/` directory contains the latest DagsHub documentation
+          pulled from the official repository, and the notebook is from the
+          upstream project repository.
+          {{- else }}
+          The `docs/` directory contains DagsHub documentation.
+          {{- end }}
+
+          Happy learning!
+          EOF
+
+          # Set proper permissions
+          find /workspace -type f -exec chmod 644 {} \; 2>/dev/null || true
+
+          # Create .jupyter directory
+          mkdir -p /workspace/.jupyter
+
+          echo "Workspace setup complete!"
+          ls -la /workspace/
+        volumeMounts:
+        - name: workspace
+          mountPath: /workspace
+        - name: notebook-content
+          mountPath: /notebook-content
+        - name: docs-content
+          mountPath: /docs-content
       containers:
       - name: {{ .Values.workbench.name }}-notebook
         image: {{ .Values.workbench.image.repository }}:{{ .Values.workbench.image.tag }}
@@ -107,6 +225,12 @@ spec:
       - name: workspace
         persistentVolumeClaim:
           claimName: {{ .Values.workbench.name }}-notebook-pvc
+      - name: notebook-content
+        configMap:
+          name: {{ .Values.workbench.name }}-notebook-content
+      - name: docs-content
+        configMap:
+          name: {{ .Values.workbench.name }}-docs-content
       {{- if .Values.workbench.shm.enabled }}
       - name: shm
         emptyDir:

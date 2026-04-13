@@ -19,15 +19,6 @@ The solution addresses the common challenge of learning LLM development without 
 
 The tutorial covers essential LLM development concepts including Retrieval-Augmented Generation (RAG) pipeline construction, model fine-tuning with LoRA adapters, and comprehensive evaluation strategies using RAGAS and LLM-as-a-judge techniques. This hands-on approach accelerates learning and provides practical experience with production-ready MLOps tools.
 
-### Architecture diagrams
-
-The architecture consists of a Jupyter workbench deployed to OpenShift AI with persistent storage for notebooks and data. Documentation can be dynamically fetched from the official DagsHub repository, ensuring users always have access to the latest guides and best practices.
-
-Key components:
-- Jupyter workbench pod with persistent storage
-- Git documentation job (optional) for fetching latest docs
-- Setup job for workspace initialization
-- ConfigMaps for static content when git docs are disabled
 
 ## Requirements
 
@@ -67,10 +58,6 @@ Key components:
      
      dagsHub:
        host: "http://localhost:3000"  # Replace with your DagsHub instance
-     
-     # Optional: Enable git-based documentation
-     gitDocs:
-       enabled: true  # Set to true for latest docs
    ```
 
 3. Deploy the workbench using Helm:
@@ -92,7 +79,8 @@ Key components:
 
 6. Verify the setup:
    ```bash
-   oc logs job/dagshub-llm-tutorial-notebook-setup -n <namespace>
+   oc logs job/dagshub-llm-tutorial-git-clone -n <namespace>
+   oc logs job.batch/dagshub-llm-tutorial-notebook -n <namespace> -c workspace-setup
    ```
 
 ### Delete

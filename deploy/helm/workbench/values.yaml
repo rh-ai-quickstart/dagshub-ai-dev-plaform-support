@@ -31,15 +31,13 @@ workbench:
   setupJob:
     image: "registry.redhat.io/ubi8/ubi-minimal:8.9"
 
-  # Git-based documentation provisioning
-  gitDocs:
-    enabled: false  # Default: backwards compatibility
-    repository: "https://dagshub.com/DAGsHub-Official/dagshub-docs.git"
-    branch: "main"
-    sourcePath: "docs"  # Subdirectory to copy from repository
-    targetPath: "docs"  # Target directory in workspace
-
-    # Git clone configuration
-    retryAttempts: 3
-    retryDelay: 10
-    timeout: 300
+  # Git sync to automatically clone docs and notebooks
+  gitSync:
+    enabled: true  # Automatically clone content from repositories
+    docs:
+      repo: "https://github.com/DagsHub/dagshub-docs.git"
+      branch: "main"
+    notebook:
+      repo: "https://github.com/rh-ai-quickstart/dagshub-ai-dev-plaform-support.git"
+      branch: "main"
+    image: "alpine/git:latest"
