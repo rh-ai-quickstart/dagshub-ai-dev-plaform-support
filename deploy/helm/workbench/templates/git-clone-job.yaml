@@ -80,6 +80,13 @@ spec:
             sleep 10
           done
 
+          # Clean up assets directories to save space and avoid unnecessary content
+          if [ -d "/tmp/dagshub-docs" ]; then
+            echo "Removing assets directories..."
+            find /tmp/dagshub-docs -type d -name "assets" -exec rm -rf {} + 2>/dev/null || true
+            echo "Assets cleanup completed"
+          fi
+
           # Copy docs if clone was successful
           if [ "$docs_failed" != "true" ]; then
             if [ -d "/tmp/dagshub-docs/docs" ]; then
