@@ -44,58 +44,62 @@ The tutorial covers essential LLM development concepts including Retrieval-Augme
 
 ## Deploy
 
-1. Navigate to the workbench deployment directory:
+**Note:** This workbench uses the project's Makefile for simplified deployment and management. All commands should be run from the project root directory.
+
+1. Navigate to the project root directory:
    ```bash
-   cd deploy/helm/workbench
+   cd /path/to/dagshub-ai-dev-platform-support
    ```
 
-2. Configure the workbench values by editing `values.yaml`:
-   ```yaml
-   workbench:
-     enabled: true
-     name: dagshub-llm-tutorial
-     username: kubeadmin  # Replace with your username
-     
-     dagsHub:
-       host: "http://localhost:3000"  # Replace with your DagsHub instance
-   ```
-
-3. Deploy the workbench using Helm:
+2. Deploy the workbench using the Makefile:
    ```bash
-   helm install dagshub-workbench . -n <namespace> --create-namespace
+   make deploy-workbench NAMESPACE=<namespace> URL=https://your-company-dagshub.com
    ```
 
-4. Monitor the deployment progress:
+3. Monitor the deployment progress:
    ```bash
    oc get jobs -n <namespace> -w
    ```
 
-5. Access the workbench:
+4. Access the workbench:
    - Open the OpenShift AI dashboard
    - Navigate to "Data Science Projects" 
    - Find your namespace/project
-   - Click on the "dagshub-llm-tutorial" workbench
+   - Click on the "dagshub-llm-tutorial-notebook" workbench
    - Open `hello_world_llm.ipynb` to start the tutorial
 
-6. Verify the setup:
+5. Verify the setup:
    ```bash
    oc logs job/dagshub-llm-tutorial-git-clone -n <namespace>
    oc logs job.batch/dagshub-llm-tutorial-notebook -n <namespace> -c workspace-setup
    ```
 
+6. Check workbench status:
+   ```bash
+   make workbench-status NAMESPACE=<namespace>
+   ```
+
+### Available Makefile Commands
+
+For a complete list of available commands and their usage, run:
+```bash
+make help
+```
+
+Key workbench commands:
+- `make deploy-workbench NAMESPACE=<namespace> URL=<dagshub-url>` - Deploy the workbench
+- `make workbench-status NAMESPACE=<namespace>` - Check workbench status
+- `make uninstall-workbench NAMESPACE=<namespace>` - Remove the workbench
+
 ### Delete
 
-Remove the workbench deployment:
+Remove the workbench deployment using the Makefile:
 
 ```bash
-helm uninstall dagshub-workbench -n <namespace>
+make uninstall-workbench NAMESPACE=<namespace>
 ```
 
-Clean up remaining resources if needed:
-
-```bash
-oc delete pvc dagshub-llm-tutorial-notebook-pvc -n <namespace>
-```
+The Makefile will prompt you to confirm deletion of the PVC (persistent volume claim) containing notebook data. Choose 'y' to delete all data or 'N' to preserve it for future use.
 
 ## Tags
 
